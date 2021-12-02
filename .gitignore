@@ -1,0 +1,8 @@
+venv
+test
+train
+*.hdf5
+.idea
+yum-dataset.zip
+*.png
+neuronka

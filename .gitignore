@@ -6,3 +6,4 @@ train
 yum-dataset.zip
 *.png
 neuronka
+__pycache__

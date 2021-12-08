@@ -2,6 +2,7 @@ import pandas as pd
 import umap.umap_ as umap
 import plotly.express as px
 
+
 def imagenet_visual():
     train_df = pd.read_csv('train.csv')
     trans = umap.UMAP(n_neighbors=5, random_state=42, n_components=3).fit(train_df.drop(columns=train_df.columns[:1], axis=1))

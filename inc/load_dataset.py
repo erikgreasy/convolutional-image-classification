@@ -2,7 +2,7 @@ import tensorflow as tf
 
 
 def load_dataset(img_height, img_width, data_type='training'):
-    """Loads training dataset from directory using keras function"""
+    """Load training dataset from directory using keras function"""
 
     batch_size = 32
 

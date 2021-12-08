@@ -3,12 +3,14 @@ from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 from tensorflow import keras
 from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras import regularizers
+from inc.helpers import die
 
 
 def train_model(train_ds, val_ds, class_names, img_height, img_width, checkpoints=False, save=False):
     """Train and return the CNN model"""
 
-    epochs = 10
+    epochs = 20
 
     num_classes = len(class_names)
 
@@ -19,28 +21,41 @@ def train_model(train_ds, val_ds, class_names, img_height, img_width, checkpoint
                                            img_width,
                                            3)),
             layers.RandomRotation(0.1),
-            layers.RandomZoom(0.1),
+            layers.RandomZoom(0.3),
         ]
     )
 
+    plt.figure(figsize=(10, 10))
+    for images, _ in train_ds.take(1):
+        for i in range(9):
+            augmented_images = data_augmentation(images)
+            ax = plt.subplot(3, 3, i + 1)
+            plt.imshow(augmented_images[0].numpy().astype("uint8"))
+            plt.axis("off")
+    plt.show()
+
     model = Sequential([
-        # data_augmentation,
-        layers.Rescaling(1. / 255),
+        data_augmentation,
+        layers.Rescaling(1. / 255, input_shape=(img_height, img_width, 3)),
         layers.Conv2D(16, 3, padding='same', activation='relu'),
         layers.MaxPooling2D(),
         layers.Conv2D(32, 3, padding='same', activation='relu'),
         layers.MaxPooling2D(),
         layers.Conv2D(64, 3, padding='same', activation='relu'),
         layers.MaxPooling2D(),
-        layers.Dropout(0.2),
+        layers.Dropout(0.3),
         layers.Flatten(),
-        layers.Dense(128, activation='relu'),
+        layers.Dense(128, activation='relu', kernel_regularizer=regularizers.l2(0.001),
+                     activity_regularizer=regularizers.l2(1e-5)),
         layers.Dense(num_classes)
     ])
 
     model.compile(optimizer='adam',
                   loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                   metrics=['accuracy'])
+
+
+    model.summary()
 
     # CHECKPOINTS
     callbacks_list = []
@@ -49,6 +64,10 @@ def train_model(train_ds, val_ds, class_names, img_height, img_width, checkpoint
         filepath = "checkpoint-{epoch:02d}-{val_accuracy:.2f}.hdf5"
         checkpoint = ModelCheckpoint(filepath, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
         callbacks_list = [checkpoint]
+
+    # EARLY STOPPING
+    # es = keras.callbacks.EarlyStopping(patience=3)
+    # callbacks_list.append(es)
 
     # TRAIN
     history = model.fit(

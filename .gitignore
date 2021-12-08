@@ -7,3 +7,5 @@ yum-dataset.zip
 *.png
 neuronka
 __pycache__
+*.csv
+*.html
